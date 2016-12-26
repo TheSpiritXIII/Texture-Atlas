@@ -1,0 +1,7 @@
+[package]
+name = "Texture Atlas"
+version = "0.1.0"
+authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
+
+[dependencies]
+image = "*"
