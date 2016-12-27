@@ -1,5 +1,5 @@
 [package]
-name = "Texture Atlas"
+name = "texture_atlas"
 version = "0.1.0"
 authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 

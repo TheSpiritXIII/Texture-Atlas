@@ -1,19 +1,19 @@
-use {AtlasBin, AtlasGenerator, AtlasObject, Rect};
+use {AtlasBin, AtlasGenerator, AtlasObject, AtlasReference};
 
-/// A generator that creates a separate bins for each object.
+/// A generator that creates a separate bin for each object.
 pub struct PassthroughGenerator;
 
 impl AtlasGenerator for PassthroughGenerator {
-	fn generate_atlas(bin_list: &[Rect], _: usize, _: usize) -> Vec<AtlasBin> {
-		let mut atlas = Vec::new();
-		for (bin_index, bin) in bin_list.iter().enumerate() {
-			let object = AtlasObject {
-				bin_index: bin_index,
+	fn generate_atlas<T: AtlasObject>(object_list: &[T], _: usize, _: usize) -> Vec<AtlasBin> {
+		let mut bin_list = Vec::new();
+		for (object_index, object) in object_list.iter().enumerate() {
+			let reference = AtlasReference {
+				object_index: object_index,
 				x: 0,
 				y: 0,
 			};
-			atlas.push(AtlasBin::with_part(object, bin.width, bin.height))
+			bin_list.push(AtlasBin::with_part(reference, object.width(), object.height()))
 		}
-		atlas
+		bin_list
 	}
 }
