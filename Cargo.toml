@@ -1,7 +1,11 @@
 [package]
 name = "texture_atlas"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["TheSpiritXIII <thespiritxiii@gmail.com>"]
 
-[dependencies]
-image = "*"
+[features]
+default = ["image"]
+
+[dependencies.image]
+version = "0.13"
+optional = true
