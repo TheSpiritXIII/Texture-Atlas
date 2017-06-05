@@ -50,7 +50,7 @@ impl AtlasRect
 }
 
 /// References an axis aligned rect placed in a bin.
-struct AtlasReference
+pub struct AtlasReference
 {
 	/// The index of the original rect list that this class references.
 	pub rect_index: usize,
@@ -68,16 +68,16 @@ struct AtlasReference
 /// conform to all rules. The bin size should be the minimum bounding size, capable of encapsulating
 /// all objects. Each object should also not pass through any boundaries and should be disjoint.
 ///
-struct AtlasBin
+pub struct AtlasBin
 {
 	/// The width size dimension of the bin.
-	pub width: u32,
+	width: u32,
 
 	/// The height size dimension of the bin.
-	pub height: u32,
+	height: u32,
 
 	/// The list of objects in this bin.
-	pub objects: Vec<AtlasReference>,
+	objects: Vec<AtlasReference>,
 }
 
 impl AtlasBin
@@ -99,8 +99,14 @@ impl AtlasBin
 		}
 	}
 
+	/// Returns the parts in this bin.
+	pub fn parts(&self) -> &[AtlasReference]
+	{
+		&self.objects
+	}
+
 	/// Adds a new rect to the bin. The size of the bin increases if mandatory.
-	pub fn add_part(&mut self, rect_index: usize, x: u32, y: u32, width: u32, height: u32)
+	pub fn parts_add(&mut self, rect_index: usize, x: u32, y: u32, width: u32, height: u32)
 	{
 		self.width = std::cmp::max(self.width, x + width);
 		self.height = std::cmp::max(self.height, y + height);
@@ -146,24 +152,36 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 	{
 		self.rect_list.len()
 	}
+
 	/// Returns the axis aligned rectangle at the given index.
 	pub fn rect(&self, index: usize) -> &AtlasRect
 	{
 		&self.rect_list[index]
 	}
+
+	pub fn bin_list(&self) -> &[AtlasBin]
+	{
+		&self.bin_list
+	}
+
+	/// Returns the total amount of bins that have been generated.
 	pub fn bin_count(&self) -> usize
 	{
 		self.bin_list.len()
 	}
+
+	/// Creates a new bin with the given rect at the top left.
 	pub fn bin_create(&mut self, rect_index: usize)
 	{
 		let rect = &self.rect_list[rect_index];
 		self.bin_list.push(AtlasBin::new(rect_index, rect.width(), rect.height()));
 	}
+
+	/// Adds a new rect to the indicated bin.
 	pub fn bin_add_rect(&mut self, bin_index: usize, rect_index: usize, x: u32, y: u32)
 	{
 		let rect = &self.rect_list[rect_index];
-		self.bin_list[bin_index].add_part(rect_index, x, y, rect.width(), rect.height());
+		self.bin_list[bin_index].parts_add(rect_index, x, y, rect.width(), rect.height());
 	}
 
 	/// Generates bins from the indicated generator using the given objects with the given maximum
