@@ -19,7 +19,7 @@ fn smoke_atlas<T: AtlasRect>(atlas: &Atlas<T>)
 		for part in bin.parts()
 		{
 			let rect_index = part.rect_index;
-			if checker[rect_index] == true
+			if checker[rect_index]
 			{
 				panic!("Bin contains rect already in another bin");
 			}
