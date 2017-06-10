@@ -175,32 +175,30 @@ impl Hsv
 	}
 }
 
-pub(crate) fn images_colored<T>(rect_list: &[T], bin_list: &[AtlasBin]) -> Vec<DynamicImage>
+pub(crate) fn colors_weight(len: usize) -> f32
+{
+	(1f32 / len as f32) * 255f32
+}
+
+pub(crate) fn colors_from_bin<T>(color_weight: f32, rect_list: &[T], bin: &AtlasBin) -> DynamicImage
 	where T: AtlasRect
 {
-	let mut image_list = Vec::with_capacity(rect_list.len());
-
-	let color_distance = u8::max_value() / rect_list.len() as u8;
 	let mut color_current = Hsv { data: [0, 255, 255] };
 
-	for bin in bin_list
-	{
-		let (width, height) = (bin.width as u32, bin.height as u32);
-		let mut image = DynamicImage::new_rgba8(width, height);
-		color_current.data[0] += color_distance;
+	let mut image = DynamicImage::new_rgba8(bin.width as u32, bin.height as u32);
 
-		for reference in &bin.objects
+	for reference in &bin.objects
+	{
+		color_current.data[0] = (reference.rect_index as f32 * color_weight) as u8;
+
+		let object = &rect_list[reference.rect_index];
+		for x in reference.x..(reference.x + object.width())
 		{
-			let object = &rect_list[reference.rect_index];
-			for x in reference.x..(reference.x + object.width())
+			for y in reference.y..(reference.y + object.height())
 			{
-				for y in reference.y..(reference.y + object.height())
-				{
-					image.put_pixel(x as u32, y as u32, color_current.to_rgb().to_rgba());
-				}
+				image.put_pixel(x as u32, y as u32, color_current.to_rgb().to_rgba());
 			}
 		}
-		image_list.push(image);
 	}
-	image_list
+	image
 }

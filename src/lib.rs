@@ -207,10 +207,25 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 	}
 
 	#[cfg(feature = "image")]
-	/// Generates images from the generated bin with uniformly separated colors.
+	/// Generates an image from the indicated bin with uniformly separated colors.
+	pub fn bin_as_colors(&self, bin_index: usize) -> DynamicImage
+	{
+		let weight = util::colors_weight(self.rect_list.len());
+		util::colors_from_bin(weight, self.rect_list, &self.bin_list[bin_index])
+	}
+
+	#[cfg(feature = "image")]
+	/// Generates images from the generated bins with uniformly separated colors.
 	pub fn as_colors(&self) -> Vec<DynamicImage>
 	{
-		util::images_colored(self.rect_list, &self.bin_list)
+		let weight = util::colors_weight(self.rect_list.len());
+		let mut image_list = Vec::with_capacity(self.rect_list.len());
+
+		for bin in &self.bin_list
+		{
+			image_list.push(util::colors_from_bin(weight, self.rect_list, bin));
+		}
+		image_list
 	}
 }
 
@@ -220,19 +235,18 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect + GenericImage<Pixel=Rgba<u8>>
 	/// Returns the given bin as an image.
 	pub fn bin_as_image(&self, bin_index: usize) -> DynamicImage
 	{
-		util::image_from_bin(self.rect_list, &self.bin_list[bin_index]);
+		util::image_from_bin(self.rect_list, &self.bin_list[bin_index])
 	}
 
 	/// Generates images from the generated bin using the given image objects.
 	pub fn as_images(&self) -> Vec<DynamicImage>
 	{
-		let mut image_list = Vec::with_capacity(rect_list.len());
+		let mut image_list = Vec::with_capacity(self.rect_list.len());
 
-		for bin in self.bin_list
+		for bin in &self.bin_list
 		{
 			image_list.push(util::image_from_bin(self.rect_list, bin));
 		}
 		image_list
-
 	}
 }
