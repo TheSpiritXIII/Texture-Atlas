@@ -13,7 +13,7 @@ impl AtlasGenerator for PassthroughGenerator
 	{
 		for rect_index in 0..atlas.rect_count()
 		{
-			atlas.bin_create(rect_index);
+			atlas.bin_add_new(rect_index);
 		}
 	}
 }

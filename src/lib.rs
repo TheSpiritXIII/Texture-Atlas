@@ -23,11 +23,14 @@
 //! 
 //! This library is intended to be used as a build script. It does not facilitate how data is loaded
 //! but users are welcome to create their own on top of this library.
+
+#[cfg(feature = "image")]
 extern crate image;
 
 pub mod gen;
 pub mod util;
 
+#[cfg(feature = "image")]
 use image::{DynamicImage, GenericImage, Rgba};
 
 /// Represents an axis aligned rectangle to be packed in a bin.
@@ -60,6 +63,9 @@ pub struct AtlasReference
 
 	/// The y-position where this rect is located in the bin.
 	pub y: u32,
+
+	/// Whether the rect is rotated 90 degrees clockwise.
+	pub rotate: bool,
 }
 
 /// A packed bin containing multiple objects.
@@ -90,6 +96,7 @@ impl AtlasBin
 			x: 0,
 			y: 0,
 			rect_index: rect_index,
+			rotate: false,
 		};
 		AtlasBin
 		{
@@ -115,6 +122,7 @@ impl AtlasBin
 			rect_index: rect_index,
 			x: x,
 			y: y,
+			rotate: false,
 		});
 	}
 }
@@ -171,7 +179,7 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 	}
 
 	/// Creates a new bin with the given rect at the top left.
-	pub fn bin_create(&mut self, rect_index: usize)
+	pub fn bin_add_new(&mut self, rect_index: usize)
 	{
 		let rect = &self.rect_list[rect_index];
 		self.bin_list.push(AtlasBin::new(rect_index, rect.width(), rect.height()));
@@ -198,30 +206,33 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 		atlas
 	}
 
+	#[cfg(feature = "image")]
 	/// Generates images from the generated bin with uniformly separated colors.
-	pub fn as_colored_images(&self) -> Vec<DynamicImage>
+	pub fn as_colors(&self) -> Vec<DynamicImage>
 	{
 		util::images_colored(self.rect_list, &self.bin_list)
 	}
 }
 
+#[cfg(feature = "image")]
 impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect + GenericImage<Pixel=Rgba<u8>>
 {
+	/// Returns the given bin as an image.
+	pub fn bin_as_image(&self, bin_index: usize) -> DynamicImage
+	{
+		util::image_from_bin(self.rect_list, &self.bin_list[bin_index]);
+	}
+
 	/// Generates images from the generated bin using the given image objects.
 	pub fn as_images(&self) -> Vec<DynamicImage>
 	{
-		create_images(self.rect_list, &self.bin_list)
-	}
-}
+		let mut image_list = Vec::with_capacity(rect_list.len());
 
-fn create_images<T: AtlasRect + GenericImage<Pixel=Rgba<u8>>>(rect_list: &[T],
-	bin_list: &[AtlasBin]) -> Vec<DynamicImage>
-{
-	let mut image_list = Vec::with_capacity(rect_list.len());
+		for bin in self.bin_list
+		{
+			image_list.push(util::image_from_bin(self.rect_list, bin));
+		}
+		image_list
 
-	for bin in bin_list
-	{
-		image_list.push(util::image_from_bin(rect_list, bin));
 	}
-	image_list
 }

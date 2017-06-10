@@ -123,7 +123,7 @@ impl AtlasGenerator for BinaryTreeGenerator
 			if !inserted
 			{
 				let bin = atlas.bin_count();
-				atlas.bin_create(rect_index);
+				atlas.bin_add_new(rect_index);
 
 				let leaf_index = leaves.len();
 				leaves.push(Rect::new(bin, 0, 0, width, height));
@@ -137,6 +137,5 @@ impl AtlasGenerator for BinaryTreeGenerator
 			max = ::std::cmp::max(max, leaves.len());
 			atlas_index += 1;
 		}
-		println!("Leaves: {}, max {}", leaves.len(), max);
 	}
 }
