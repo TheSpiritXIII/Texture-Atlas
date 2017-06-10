@@ -146,6 +146,76 @@ pub trait AtlasGenerator
 	fn generate<T: AtlasRect>(&self, atlas: &mut Atlas<T>, width: u32, height: u32);
 }
 
+/// List data structure for adding rects. Tracks total size of all rects.
+pub struct AtlasRectList<T: AtlasRect>
+{
+	rect_list: Vec<T>,
+	total_size: u64,
+}
+
+impl<T> AtlasRectList<T> where T: AtlasRect
+{
+	pub fn new() -> Self
+	{
+		AtlasRectList
+		{
+			rect_list: Vec::new(),
+			total_size: 0,
+		}
+	}
+	pub fn add(&mut self, rect: T)
+	{
+		let size = AtlasRect::width(&rect) as u64 * AtlasRect::height(&rect) as u64;
+		self.total_size += size;
+		self.rect_list.push(rect);
+	}
+	pub fn build(&self, width: u32, height: u32) -> AtlasBuilder<T>
+	{
+		let size = width as u64 * height as u64;
+		let lower_bound = (size / self.total_size) + 1;
+		AtlasBuilder::new(&self.rect_list, width, height, lower_bound as usize)
+	}
+}
+
+pub struct AtlasBuilder<'a, T> where T: 'a + AtlasRect
+{
+	rect_list: &'a [T],
+	width: u32,
+	height: u32,
+	lower_bound: usize,
+	rotate: bool,
+}
+
+impl<'a, T> AtlasBuilder<'a, T> where T: 'a + AtlasRect
+{
+	fn new(rect_list: &'a [T], width: u32, height: u32, lower_bound: usize) -> Self
+	{
+		AtlasBuilder
+		{
+			rect_list,
+			width,
+			height,
+			lower_bound,
+			rotate: false,
+		}
+	}
+	pub fn with_rotate<'b>(&'b mut self, rotate: bool) -> &'b mut Self
+	{
+		self.rotate = rotate;
+		self
+	}
+	pub fn generate<G: AtlasGenerator>(self, generator: &G) -> Atlas<'a, T>
+	{
+		let mut atlas = Atlas
+		{
+			rect_list: self.rect_list,
+			bin_list: Vec::with_capacity(self.lower_bound),
+		};
+		generator.generate(&mut atlas, self.width, self.height);
+		atlas
+	}
+}
+
 /// Encapsulates axis aligned rectangles and resulting bins.
 pub struct Atlas<'a, T: 'a + AtlasRect>
 {
@@ -155,6 +225,22 @@ pub struct Atlas<'a, T: 'a + AtlasRect>
 
 impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 {
+	pub fn build(rect_list: &'a [T], width: u32, height: u32) -> AtlasBuilder<T>
+	{
+		AtlasBuilder::new(rect_list, width, height, 1)
+	}
+
+	/// Generates bins from the indicated generator using the given objects with the given maximum
+	/// bin size constraint.
+	pub fn new(rect_list: &'a [T]) -> Self
+	{
+		Self
+		{
+			rect_list,
+			bin_list: Vec::new(),
+		}
+	}
+
 	/// Returns the amount of axis aligned rectangles that will be binned.
 	pub fn rect_count(&self) -> usize
 	{
@@ -190,20 +276,6 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 	{
 		let rect = &self.rect_list[rect_index];
 		self.bin_list[bin_index].parts_add(rect_index, x, y, rect.width(), rect.height());
-	}
-
-	/// Generates bins from the indicated generator using the given objects with the given maximum
-	/// bin size constraint.
-	pub fn with_max<G: AtlasGenerator>(generator: &G, rect_list: &'a [T], width: u32,
-		height: u32) -> Self
-	{
-		let mut atlas = Self
-		{
-			rect_list: rect_list,
-			bin_list: Vec::with_capacity(1),
-		};
-		generator.generate(&mut atlas, width, height);
-		atlas
 	}
 
 	#[cfg(feature = "image")]
