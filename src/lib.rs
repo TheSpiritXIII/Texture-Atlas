@@ -89,14 +89,14 @@ pub struct AtlasBin
 impl AtlasBin
 {
 	/// Initializes a new bin with the given rect reference and size.
-	pub fn new(rect_index: usize, width: u32, height: u32) -> Self
+	pub fn new(rect_index: usize, width: u32, height: u32, rotate: bool) -> Self
 	{
 		let reference = AtlasReference
 		{
 			x: 0,
 			y: 0,
-			rect_index: rect_index,
-			rotate: false,
+			rect_index,
+			rotate,
 		};
 		AtlasBin
 		{
@@ -113,16 +113,16 @@ impl AtlasBin
 	}
 
 	/// Adds a new rect to the bin. The size of the bin increases if mandatory.
-	pub fn parts_add(&mut self, rect_index: usize, x: u32, y: u32, width: u32, height: u32)
+	pub fn parts_add(&mut self, rect_index: usize, x: u32, y: u32, width: u32, height: u32, rotate: bool)
 	{
 		self.width = std::cmp::max(self.width, x + width);
 		self.height = std::cmp::max(self.height, y + height);
 		self.objects.push(AtlasReference
 		{
-			rect_index: rect_index,
-			x: x,
-			y: y,
-			rotate: false,
+			rect_index,
+			x,
+			y,
+			rotate,
 		});
 	}
 }
@@ -143,7 +143,7 @@ impl AtlasRect for AtlasBin
 pub trait AtlasGenerator
 {
 	/// Generates a list of bins from the given list of objects.
-	fn generate<T: AtlasRect>(&self, atlas: &mut Atlas<T>, width: u32, height: u32);
+	fn generate<T: AtlasRect>(&self, atlas: &mut Atlas<T>, width: u32, height: u32, rotate: bool);
 }
 
 /// List data structure for adding rects. Tracks total size of all rects.
@@ -163,11 +163,23 @@ impl<T> AtlasRectList<T> where T: AtlasRect
 			total_size: 0,
 		}
 	}
+	pub fn with_capacity(capacity: usize) -> Self
+	{
+		AtlasRectList
+		{
+			rect_list: Vec::with_capacity(capacity),
+			total_size: 0,
+		}
+	}
 	pub fn add(&mut self, rect: T)
 	{
 		let size = AtlasRect::width(&rect) as u64 * AtlasRect::height(&rect) as u64;
 		self.total_size += size;
 		self.rect_list.push(rect);
+	}
+	pub fn len(&self) -> usize
+	{
+		self.rect_list.len()
 	}
 	pub fn build(&self, width: u32, height: u32) -> AtlasBuilder<T>
 	{
@@ -211,7 +223,7 @@ impl<'a, T> AtlasBuilder<'a, T> where T: 'a + AtlasRect
 			rect_list: self.rect_list,
 			bin_list: Vec::with_capacity(self.lower_bound),
 		};
-		generator.generate(&mut atlas, self.width, self.height);
+		generator.generate(&mut atlas, self.width, self.height, false);
 		atlas
 	}
 }
@@ -265,17 +277,17 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 	}
 
 	/// Creates a new bin with the given rect at the top left.
-	pub fn bin_add_new(&mut self, rect_index: usize)
+	pub fn bin_add_new(&mut self, rect_index: usize, rotate: bool)
 	{
 		let rect = &self.rect_list[rect_index];
-		self.bin_list.push(AtlasBin::new(rect_index, rect.width(), rect.height()));
+		self.bin_list.push(AtlasBin::new(rect_index, rect.width(), rect.height(), rotate));
 	}
 
 	/// Adds a new rect to the indicated bin.
-	pub fn bin_add_rect(&mut self, bin_index: usize, rect_index: usize, x: u32, y: u32)
+	pub fn bin_add_rect(&mut self, bin_index: usize, rect_index: usize, x: u32, y: u32, rotate: bool)
 	{
 		let rect = &self.rect_list[rect_index];
-		self.bin_list[bin_index].parts_add(rect_index, x, y, rect.width(), rect.height());
+		self.bin_list[bin_index].parts_add(rect_index, x, y, rect.width(), rect.height(), rotate);
 	}
 
 	#[cfg(feature = "image")]

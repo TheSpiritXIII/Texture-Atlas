@@ -122,12 +122,27 @@ pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
 	for reference in &bin.objects
 	{
 		let texture = &rect_list[reference.rect_index];
-		for x in 0..AtlasRect::width(texture) as u32
+		if !reference.rotate
 		{
-			for y in 0..AtlasRect::height(texture) as u32
+			for x in 0..AtlasRect::width(texture) as u32
 			{
-				let pixel = texture.get_pixel(x, y);
-				image.put_pixel(reference.x + x, reference.y + y, pixel);
+				for y in 0..AtlasRect::height(texture) as u32
+				{
+					let pixel = texture.get_pixel(x, y);
+					image.put_pixel(reference.x + x, reference.y + y, pixel);
+				}
+			}
+		}
+		else
+		{
+			for x in 0..AtlasRect::width(texture) as u32
+			{
+				for y in 0..AtlasRect::height(texture) as u32
+				{
+					let pixel = texture.get_pixel(x, y);
+					println!("{}, {} ", reference.x + (AtlasRect::height(texture) - 1 - y), reference.y + x);
+					image.put_pixel(reference.x + (AtlasRect::height(texture) - 1 - y), reference.y + x, pixel);
+				}
 			}
 		}
 	}
@@ -192,9 +207,17 @@ pub(crate) fn colors_from_bin<T>(color_weight: f32, rect_list: &[T], bin: &Atlas
 		color_current.data[0] = (reference.rect_index as f32 * color_weight) as u8;
 
 		let object = &rect_list[reference.rect_index];
-		for x in reference.x..(reference.x + object.width())
+		let (width, height) = if !reference.rotate
 		{
-			for y in reference.y..(reference.y + object.height())
+			(object.width(), object.height())
+		}
+		else
+		{
+			(object.height(), object.width())
+		};
+		for x in reference.x..(reference.x + width)
+		{
+			for y in reference.y..(reference.y + height)
 			{
 				image.put_pixel(x as u32, y as u32, color_current.to_rgb().to_rgba());
 			}

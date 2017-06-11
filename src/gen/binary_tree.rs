@@ -94,7 +94,7 @@ impl BinaryTreeGenerator
 
 impl AtlasGenerator for BinaryTreeGenerator
 {
-	fn generate<T: AtlasRect>(&self, atlas: &mut Atlas<T>, width: u32, height: u32)
+	fn generate<T: AtlasRect>(&self, atlas: &mut Atlas<T>, width: u32, height: u32, _: bool)
 	{
 		let atlas_list = sort_by_longest_width_increasing(atlas);
 		let mut atlas_index = 0;
@@ -114,7 +114,7 @@ impl AtlasGenerator for BinaryTreeGenerator
 				if width <= leaf.width && height <= leaf.height
 				{
 					BinaryTreeGenerator::subdivide(&mut leaves, leaf_index, width, height);
-					atlas.bin_add_rect(leaf.bin, rect_index, leaf.x, leaf.y);
+					atlas.bin_add_rect(leaf.bin, rect_index, leaf.x, leaf.y, false);
 
 					inserted = true;
 					break;
@@ -123,7 +123,7 @@ impl AtlasGenerator for BinaryTreeGenerator
 			if !inserted
 			{
 				let bin = atlas.bin_count();
-				atlas.bin_add_new(rect_index);
+				atlas.bin_add_new(rect_index, false);
 
 				let leaf_index = leaves.len();
 				leaves.push(Rect::new(bin, 0, 0, width, height));

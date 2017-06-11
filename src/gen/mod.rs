@@ -9,11 +9,11 @@ pub struct PassthroughGenerator;
 
 impl AtlasGenerator for PassthroughGenerator
 {
-	fn generate<T: AtlasRect>(&self, atlas: &mut Atlas<T>, _: u32, _: u32)
+	fn generate<T: AtlasRect>(&self, atlas: &mut Atlas<T>, _: u32, _: u32, _: bool)
 	{
 		for rect_index in 0..atlas.rect_count()
 		{
-			atlas.bin_add_new(rect_index);
+			atlas.bin_add_new(rect_index, false);
 		}
 	}
 }
