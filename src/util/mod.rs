@@ -36,3 +36,42 @@ impl AtlasRect for Rect
 		self.height
 	}
 }
+
+impl<T: AsRef<Rect>> AtlasRect for T
+{
+	fn width(&self) -> u32
+	{
+		self.as_ref().width
+	}
+	fn height(&self) -> u32
+	{
+		self.as_ref().height
+	}
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct RotatableRect
+{
+	pub rect: Rect,
+	pub rotated: bool,
+}
+
+impl RotatableRect
+{
+	pub fn new(width: u32, height: u32, rotated: bool) -> Self
+	{
+		Self
+		{
+			rect: Rect::new(width, height),
+			rotated,
+		}
+	}
+}
+
+impl AsRef<Rect> for RotatableRect
+{
+	fn as_ref(&self) -> &Rect
+	{
+		&self.rect
+	}
+}

@@ -40,25 +40,29 @@ fn image_single()
 #[test]
 fn image_single_rotated()
 {
-	const IMAGE_SIZE: u32 = 256;
-	let mut image = DynamicImage::new_luma8(IMAGE_SIZE, IMAGE_SIZE);
+	// Make sure the image does not have equal sides.
+	const IMAGE_WIDTH: u32 = 256;
+	const IMAGE_HEIGHT: u32 = 128;
+	let mut image = DynamicImage::new_luma8(IMAGE_WIDTH, IMAGE_HEIGHT);
+
+	// Make sure the image is asymmetric.
 	let pixel = Rgba::<u8> { data: [255, 255, 255, 255] };
-	for index in 0..IMAGE_SIZE
+	for x in 0..IMAGE_WIDTH
 	{
-		image.put_pixel(index, index, pixel);
-		image.put_pixel(128, index, pixel);
+		// Creates an image with the following lines:
+		// - Diagonal line going from the top-left to the bottom-right.
+		let percentage = x as f32 / IMAGE_WIDTH as f32;
+		let y = (percentage * IMAGE_HEIGHT as f32) as u32;
+		image.put_pixel(x, y, pixel);
+
+		// - Horizontal line going through the center.
+		image.put_pixel(x, IMAGE_HEIGHT / 2, pixel);
 	}
 	let flipped = image.rotate90();
-	let ref mut file = std::fs::File::create(&std::path::Path::new(format!("output/before.png").as_str())).unwrap();
-	let _ = image.save(file, image::PNG).unwrap();
-	let ref mut file = std::fs::File::create(&std::path::Path::new(format!("output/expect.png").as_str())).unwrap();
-	let _ = flipped.save(file, image::PNG).unwrap();
 
 	let rect_list = vec![image];
 	let mut atlas = Atlas::new(&rect_list);
 	atlas.bin_add_new(0, true);
-	let ref mut file = std::fs::File::create(&std::path::Path::new(format!("output/after.png").as_str())).unwrap();
-	let _ = atlas.bin_as_image(0).save(file, image::PNG).unwrap();
 	assert!(image_equal(atlas.bin_as_image(0), flipped));
 }
 

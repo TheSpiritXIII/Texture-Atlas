@@ -135,17 +135,17 @@ fn smoke<T: AtlasGenerator>(generator: &T)
 
 	// Empty rect list should generate no bins.
 	let list_empty: Vec<Rect> = Vec::new();
-	let atlas = Atlas::build(&list_empty, ATLAS_WIDTH, ATLAS_HEIGHT).generate(generator);
+	let atlas = Atlas::build(&list_empty, ATLAS_WIDTH, ATLAS_HEIGHT, false).generate(generator);
 	assert_eq!(atlas.bin_count(), 0);
 
 	// Single item rect list should always generate one bin.
 	let list_single = vec![rect_large];
-	let atlas = Atlas::build(&list_single, ATLAS_WIDTH, ATLAS_HEIGHT).generate(generator);
+	let atlas = Atlas::build(&list_single, ATLAS_WIDTH, ATLAS_HEIGHT, false).generate(generator);
 	assert_eq!(atlas.bin_count(), 1);
 
 	// Having two large items means you cannot fit everything, so two bins.
 	let list_large = vec![rect_large, rect_large];
-	let atlas = Atlas::build(&list_large, ATLAS_WIDTH, ATLAS_HEIGHT).generate(generator);
+	let atlas = Atlas::build(&list_large, ATLAS_WIDTH, ATLAS_HEIGHT, false).generate(generator);
 	assert_eq!(atlas.bin_count(), 2);
 	smoke_atlas(&atlas);
 }

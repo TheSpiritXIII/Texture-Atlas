@@ -116,8 +116,8 @@ pub fn border_crop(image: &mut DynamicImage) -> DynamicImage
 pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
 	where T: AtlasRect + GenericImage<Pixel=Rgba<u8>>
 {
-	let (width, height) = (bin.width, bin.height);
-	let mut image = DynamicImage::new_rgba8(width, height);
+	let dimensions = (bin as &AtlasRect).dimensions();
+	let mut image = DynamicImage::new_rgba8(dimensions.width, dimensions.height);
 
 	for reference in &bin.objects
 	{
@@ -140,7 +140,6 @@ pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
 				for y in 0..AtlasRect::height(texture) as u32
 				{
 					let pixel = texture.get_pixel(x, y);
-					println!("{}, {} ", reference.x + (AtlasRect::height(texture) - 1 - y), reference.y + x);
 					image.put_pixel(reference.x + (AtlasRect::height(texture) - 1 - y), reference.y + x, pixel);
 				}
 			}
@@ -200,24 +199,18 @@ pub(crate) fn colors_from_bin<T>(color_weight: f32, rect_list: &[T], bin: &Atlas
 {
 	let mut color_current = Hsv { data: [0, 255, 255] };
 
-	let mut image = DynamicImage::new_rgba8(bin.width as u32, bin.height as u32);
+	let mut image = DynamicImage::new_rgba8(bin.dimensions.width as u32, bin.dimensions.height as u32);
 
 	for reference in &bin.objects
 	{
 		color_current.data[0] = (reference.rect_index as f32 * color_weight) as u8;
 
-		let object = &rect_list[reference.rect_index];
-		let (width, height) = if !reference.rotate
+		let rotate = reference.rotate;
+		let dimensions = (&rect_list[reference.rect_index] as &AtlasRect).dimensions_rotated(rotate);
+
+		for x in reference.x..(reference.x + dimensions.width)
 		{
-			(object.width(), object.height())
-		}
-		else
-		{
-			(object.height(), object.width())
-		};
-		for x in reference.x..(reference.x + width)
-		{
-			for y in reference.y..(reference.y + height)
+			for y in reference.y..(reference.y + dimensions.height)
 			{
 				image.put_pixel(x as u32, y as u32, color_current.to_rgb().to_rgba());
 			}
