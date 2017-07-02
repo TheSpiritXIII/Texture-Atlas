@@ -20,7 +20,7 @@ impl<T> AsRef<Rect> for RectReference<T> where T: AsRef<Rect>
 
 fn sort_by_longest_width_increasing<T: AtlasRect>(atlas: &Atlas<T>, rotate: bool) -> Vec<RectReference<RotatableRect>>
 {
-	let mut rect_list = Vec::with_capacity(atlas.rect_count());
+	let mut rect_list = Vec::with_capacity(atlas.rect_list().len());
 	for (index, rect) in atlas.rect_list().iter().enumerate()
 	{
 		rect_list.push(RectReference
@@ -132,7 +132,6 @@ impl AtlasGenerator for BinaryTreeGenerator
 			{
 				let leaf = leaves[leaf_index];
 				let dimensions = &atlas_list[atlas_index].rect.rect;
-				println!("{:?}", dimensions);
 				if dimensions.width <= leaf.width && dimensions.height <= leaf.height
 				{
 					BinaryTreeGenerator::subdivide(&mut leaves, leaf_index, dimensions.width, dimensions.height);
@@ -144,14 +143,12 @@ impl AtlasGenerator for BinaryTreeGenerator
 			}
 			if !inserted
 			{
-				let bin = atlas.bin_count();
-				atlas.bin_add_new(rect_index, false);
+				let bin = atlas.bin_add_new(rect_index, false);
 
 				let leaf_index = leaves.len();
 				leaves.push(Rectr::new(bin, 0, 0, widthr, heightr));
 
-				let rect = atlas.rect(rect_index);
-				let dimensions = rect.dimensions();
+				let dimensions = (&atlas.rect_list()[rect_index] as &AtlasRect).dimensions();
 
 				BinaryTreeGenerator::subdivide(&mut leaves, leaf_index, dimensions.width, dimensions.height);
 			}

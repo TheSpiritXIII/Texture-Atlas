@@ -1,3 +1,5 @@
+//! General and image related utility functions.
+
 #[cfg(feature = "image")]
 mod img;
 
@@ -6,10 +8,14 @@ pub use self::img::*;
 
 use AtlasRect;
 
+/// An axis-aligned rectangle.
 #[derive(Copy, Clone, Debug)]
 pub struct Rect
 {
+	/// The width dimension of the rectangle.
 	pub width: u32,
+
+	/// The height dimension of the rectangle.
 	pub height: u32,
 }
 
@@ -49,10 +55,14 @@ impl<T: AsRef<Rect>> AtlasRect for T
 	}
 }
 
+/// An axis-aligned rectangle that can be rotated.
 #[derive(Copy, Clone, Debug)]
 pub struct RotatableRect
 {
+	/// The dimensions of the rectangle.
 	pub rect: Rect,
+
+	/// True if this rectagle is rotated 90 degrees clockwise.
 	pub rotated: bool,
 }
 

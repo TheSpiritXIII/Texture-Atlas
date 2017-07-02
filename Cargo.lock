@@ -1,6 +1,6 @@
 [root]
 name = "texture_atlas"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

@@ -61,10 +61,10 @@ use std::collections::HashSet;
 fn has_overlaps<T: AtlasRect>(atlas: &Atlas<T>, bin: &AtlasBin) -> bool
 {
 	// Sweep horizontally.
-	let mut sweep_list = Vec::with_capacity(bin.parts().len());
-	for part in bin.parts()
+	let mut sweep_list = Vec::with_capacity(bin.part_list().len());
+	for part in bin.part_list()
 	{
-		let height = atlas.rect(part.rect_index).height();
+		let height = atlas.rect_list()[part.rect_index].height();
 		sweep_list.push(SweepPart::new(part.rect_index, true, part.y));
 		sweep_list.push(SweepPart::new(part.rect_index, false, part.y + height));
 	}
@@ -77,13 +77,13 @@ fn has_overlaps<T: AtlasRect>(atlas: &Atlas<T>, bin: &AtlasBin) -> bool
 	{
 		if sweep.start
 		{
-			let width = atlas.rect(sweep.rect_index).width();
+			let width = atlas.rect_list()[sweep.rect_index].width();
 			inner_set.insert((sweep.value, sweep.value + width));
 		}
 		else
 		{
 			// TODO.
-			let width = atlas.rect(sweep.rect_index).width();
+			let width = atlas.rect_list()[sweep.rect_index].width();
 			inner_set.remove(&(sweep.value, sweep.value + width));
 		}
 	}
@@ -94,7 +94,7 @@ fn has_overlaps<T: AtlasRect>(atlas: &Atlas<T>, bin: &AtlasBin) -> bool
 fn smoke_atlas<T: AtlasRect>(atlas: &Atlas<T>)
 {
 	// If the rect generates more bins than rects, something is wrong.
-	assert!(atlas.bin_count() <= atlas.rect_count());
+	assert!(atlas.bin_list().len() <= atlas.rect_list().len());
 	atlas.bin_list();
 
 	// Make sure no bins repeat textures.
@@ -102,7 +102,7 @@ fn smoke_atlas<T: AtlasRect>(atlas: &Atlas<T>)
 	let mut checker = vec![false; counter];
 	for bin in atlas.bin_list()
 	{
-		for part in bin.parts()
+		for part in bin.part_list()
 		{
 			let rect_index = part.rect_index;
 			if checker[rect_index]
@@ -136,17 +136,17 @@ fn smoke<T: AtlasGenerator>(generator: &T)
 	// Empty rect list should generate no bins.
 	let list_empty: Vec<Rect> = Vec::new();
 	let atlas = Atlas::build(&list_empty, ATLAS_WIDTH, ATLAS_HEIGHT, false).generate(generator);
-	assert_eq!(atlas.bin_count(), 0);
+	assert_eq!(atlas.bin_list().len(), 0);
 
 	// Single item rect list should always generate one bin.
 	let list_single = vec![rect_large];
 	let atlas = Atlas::build(&list_single, ATLAS_WIDTH, ATLAS_HEIGHT, false).generate(generator);
-	assert_eq!(atlas.bin_count(), 1);
+	assert_eq!(atlas.bin_list().len(), 1);
 
 	// Having two large items means you cannot fit everything, so two bins.
 	let list_large = vec![rect_large, rect_large];
 	let atlas = Atlas::build(&list_large, ATLAS_WIDTH, ATLAS_HEIGHT, false).generate(generator);
-	assert_eq!(atlas.bin_count(), 2);
+	assert_eq!(atlas.bin_list().len(), 2);
 	smoke_atlas(&atlas);
 }
 

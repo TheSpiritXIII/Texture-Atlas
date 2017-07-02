@@ -2,11 +2,6 @@ use image::{DynamicImage, GenericImage, Pixel, Rgb, Rgba};
 
 use ::{AtlasBin, AtlasRect};
 
-// trait AsDynamicImage
-// {
-// 	fn as_image<'a>() -> &'a DynamicImage;
-// }
-
 impl AtlasRect for AsRef<DynamicImage>
 {
 	fn width(&self) -> u32
@@ -36,7 +31,7 @@ const RGBA_EMPTY: Rgba<u8> = Rgba::<u8>
 	data: [0, 0, 0, 0],
 };
 
-/// Returns the amount of empty space at the left of the image.
+/// Returns the amount of empty space at the left of the given image.
 pub fn border_left(image: &DynamicImage) -> u32
 {
 	for x in 0..GenericImage::width(image)
@@ -52,7 +47,7 @@ pub fn border_left(image: &DynamicImage) -> u32
 	GenericImage::width(image)
 }
 
-/// Returns the amount of empty space at the right of the image.
+/// Returns the amount of empty space at the right of the given image.
 pub fn border_right(image: &DynamicImage) -> u32
 {
 	for x in (0..GenericImage::width(image)).rev()
@@ -68,7 +63,7 @@ pub fn border_right(image: &DynamicImage) -> u32
 	0
 }
 
-/// Returns the amount of empty space at the top of the image.
+/// Returns the amount of empty space at the top of the given image.
 pub fn border_top(image: &DynamicImage) -> u32
 {
 	for y in 0..GenericImage::height(image)
@@ -84,7 +79,7 @@ pub fn border_top(image: &DynamicImage) -> u32
 	GenericImage::height(image)
 }
 
-/// Returns the amount of empty space at the bottom of the image.
+/// Returns the amount of empty space at the bottom of the given image.
 pub fn border_bottom(image: &DynamicImage) -> u32
 {
 	for y in (0..GenericImage::height(image)).rev()
@@ -107,10 +102,13 @@ pub fn border(image: &DynamicImage) -> (u32, u32, u32, u32)
 }
 
 /// Crops the given image by removing empty borders.
-pub fn border_crop(image: &mut DynamicImage) -> DynamicImage
+///
+/// Returns a tuple of the cropped image, left, right, top then bottom crop amount.
+///
+pub fn border_crop(image: &mut DynamicImage) -> (DynamicImage, u32, u32, u32, u32)
 {
 	let (left, right, top, bottom) = border(image);
-	image.crop(left, top, right - left, bottom - top)
+	(image.crop(left, top, right - left, bottom - top), left, right, top, bottom)
 }
 
 pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
@@ -119,7 +117,7 @@ pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
 	let dimensions = (bin as &AtlasRect).dimensions();
 	let mut image = DynamicImage::new_rgba8(dimensions.width, dimensions.height);
 
-	for reference in &bin.objects
+	for reference in &bin.part_list
 	{
 		let texture = &rect_list[reference.rect_index];
 		if !reference.rotate
@@ -201,7 +199,7 @@ pub(crate) fn colors_from_bin<T>(color_weight: f32, rect_list: &[T], bin: &Atlas
 
 	let mut image = DynamicImage::new_rgba8(bin.dimensions.width as u32, bin.dimensions.height as u32);
 
-	for reference in &bin.objects
+	for reference in &bin.part_list
 	{
 		color_current.data[0] = (reference.rect_index as f32 * color_weight) as u8;
 
