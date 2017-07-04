@@ -1,7 +1,28 @@
+sudo: false
 language: rust
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      - cmake
+    sources:
+      - kalakris-cmake
 rust:
   - stable
   - beta
   - nightly
+before_script:
+  - |
+      cargo install cargo-travis &&
+      export PATH=$HOME/.cargo/bin:$PATH
 script:
-  - cargo test
+  - |
+      cargo build &&
+      cargo test &&
+      cargo bench &&
+      cargo doc
+after_success:
+  - cargo coveralls
