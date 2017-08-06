@@ -13,7 +13,7 @@
 //! - `BinaryTreeGenerator`
 //!
 //! All algorithms are expected to take and respect a size constraint and a flag indicating whether
-//! or not to rotate of rects.
+//! or not to rotate rects.
 //!
 //! ## Future
 //!
@@ -23,7 +23,7 @@
 //! - Improve tests and documentation.
 //! - Add basic CLI tool.
 //! - Add "Max Rects" generator.
-//! - Submit to creates.io.
+//! - Submit to crates.io.
 //! - ABI Stablizaation.
 //!
 //! # Common Usage
@@ -34,7 +34,7 @@
 //! All atlas generation is done with a simple `AtlasRect` trait that must be implemented on
 //! whatever you wish to generate an atlas for. For convenience, this trait is pre-implemented for
 //! the `image` crate's `DynamicImage` struct and also any struct that implements
-//! `AsRef<DynamicImage>`.
+//! `AsRef<Rect>`.
 //!
 //! Before bin packing, you must have an instance of `AtlasBuilder`. There are two ways to achieve
 //! that: The first is using `Atlas::build` and passing an array to it. The second is using the
@@ -84,8 +84,11 @@ extern crate image;
 pub mod gen;
 pub mod util;
 
+use std::borrow::Borrow;
+use std::cmp::max;
+
 #[cfg(feature = "image")]
-use image::{DynamicImage, GenericImage, Rgba};
+use image::DynamicImage;
 
 use util::{Rect, RotatableRect};
 
@@ -219,8 +222,8 @@ impl AtlasBin
 	/// Adds a new rect to the bin. The size of the bin increases if mandatory.
 	fn part_add(&mut self, rect_index: usize, x: u32, y: u32, dimensions: Rect, rotate: bool)
 	{
-		self.dimensions.width = std::cmp::max(self.dimensions.width, x + dimensions.width);
-		self.dimensions.height = std::cmp::max(self.dimensions.height, y + dimensions.height);
+		self.dimensions.width = max(self.dimensions.width, x + dimensions.width);
+		self.dimensions.height = max(self.dimensions.height, y + dimensions.height);
 		self.part_list.push(AtlasPart
 		{
 			rect_index,
@@ -434,7 +437,7 @@ impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect
 }
 
 #[cfg(feature = "image")]
-impl<'a, T> Atlas<'a, T> where T: 'a + AtlasRect + GenericImage<Pixel=Rgba<u8>>
+impl<'a, T> Atlas<'a, T> where T: AtlasRect + Borrow<DynamicImage>
 {
 	/// Returns the given bin as an image.
 	pub fn bin_as_image(&self, bin_index: usize) -> DynamicImage

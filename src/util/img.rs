@@ -1,18 +1,8 @@
+use std::borrow::Borrow;
+
 use image::{DynamicImage, GenericImage, Pixel, Rgb, Rgba};
 
 use ::{AtlasBin, AtlasRect};
-
-impl AtlasRect for AsRef<DynamicImage>
-{
-	fn width(&self) -> u32
-	{
-		GenericImage::width(self.as_ref()) as u32
-	}
-	fn height(&self) -> u32
-	{
-		GenericImage::height(self.as_ref()) as u32
-	}
-}
 
 impl AtlasRect for DynamicImage
 {
@@ -112,7 +102,7 @@ pub fn border_crop(image: &mut DynamicImage) -> (DynamicImage, u32, u32, u32, u3
 }
 
 pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
-	where T: AtlasRect + GenericImage<Pixel=Rgba<u8>>
+	where T: AtlasRect + Borrow<DynamicImage>
 {
 	let dimensions = (bin as &AtlasRect).dimensions();
 	let mut image = DynamicImage::new_rgba8(dimensions.width, dimensions.height);
@@ -126,7 +116,7 @@ pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
 			{
 				for y in 0..AtlasRect::height(texture) as u32
 				{
-					let pixel = texture.get_pixel(x, y);
+					let pixel = texture.borrow().get_pixel(x, y);
 					image.put_pixel(reference.x + x, reference.y + y, pixel);
 				}
 			}
@@ -137,7 +127,7 @@ pub(crate) fn image_from_bin<T>(rect_list: &[T], bin: &AtlasBin) -> DynamicImage
 			{
 				for y in 0..AtlasRect::height(texture) as u32
 				{
-					let pixel = texture.get_pixel(x, y);
+					let pixel = texture.borrow().get_pixel(x, y);
 					image.put_pixel(reference.x + (AtlasRect::height(texture) - 1 - y), reference.y + x, pixel);
 				}
 			}

@@ -8,5 +8,5 @@ license = "MIT"
 default = ["image"]
 
 [dependencies.image]
-version = "0.14"
+version = "0.15"
 optional = true
